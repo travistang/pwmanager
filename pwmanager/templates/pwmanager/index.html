@@ -101,18 +101,18 @@ $(function(){
 	{
 		var dialog = bootbox.dialog({
 		    title: 'Create a password',
-		    message: "<form id='pw-form' method='post' action='create'>\
+		    message: "<form id='pw-form' method='post' action='create'>{% csrf_token %}\
 			    	<div class='form-group'>\
 			    		<label for='pw-name'>Name: (required)</label>\
-			    		<input type='text' class='form-control' id='pw-name' required>\
+			    		<input type='text' class='form-control' id='pw-name' name='pw-name' required>\
 				    </div>\
 				    <div class='form-group'>\
 				    	<label for='pw-proposed'>Proposed Password:</label>\
-				    	<input type='text' class='form-control' id='pw-proposed' readonly required>\
+				    	<input type='text' class='form-control' id='pw-proposed' name='pw-proposed' readonly required>\
 				    </div>\
 					<div class='form-group'>\
 				    	<label for='pw-length'>Password Length:</label>\
-				    	<input id='pw-length' value='10' class='con'>\
+				    	<input id='pw-length' name='pw-length' value='10' class='con'>\
 				    </div>\
 				    <div class='form-group'>\
 				    	<label>Password should consist of: </label>\
@@ -168,7 +168,7 @@ $(function(){
 			generate_passwords(spinner);
 		});
 
-		// for first time pop-up
+		// for first time pop-up,
 		if($('#pw-proposed').val().length == 0)
 		{
 			generate_passwords(spinner);
@@ -176,7 +176,27 @@ $(function(){
         
         $('#pw-form').submit(function(event)
 		{
-			console.log('submit form');
+			event.preventDefault();
+			if(!$('#pw-form').valid()) return;
+			var formData = $(this).serialize();
+			var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+			$.ajaxSetup({
+				type: 'POST',
+				url: 'create',
+				beforeSend: function(xhr,settings)
+				{
+					xhr.setRequestHeader("X-CSRFToken", csrftoken);
+				}
+			});
+
+			$.ajax({
+				data: formData
+			}).success(function(response,status,xhr)
+			{
+				// handle response
+				console.log(response);
+			});
+			// return false;
 		});
 		$('#pw-form').validate();
 
@@ -194,6 +214,16 @@ $(function(){
 
 	// filter list of password to trigger the "no passwords found", if it should be triggered
 	filterPassword();
+
+	var socket = new WebSocket('ws://' + window.location.host + '/pwmanager/list');
+    socket.onopen = function open() {
+      console.log('WebSockets connection created.');
+    };
+
+    if (socket.readyState == WebSocket.OPEN) {
+      socket.onopen();
+    }
+
 });
 </script>
 
