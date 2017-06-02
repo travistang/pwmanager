@@ -1,0 +1,236 @@
+
+{% load static %}
+{% load bootstrap3 %}
+{% load password_filters %}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.16.0/jquery.validate.min.js"></script>
+
+
+
+<script>
+$(function(){
+	var filterPassword = function()
+	{
+		var query = document.getElementById('search-field').value;
+		var no_results = true;
+		{% for p in passwords %}
+			var domid = "{{p.name}}";
+
+			var vis = (domid.indexOf(query) !== -1 || query.length == 0)?"visible":"hidden";
+			if (vis == 'visible') no_results = false;
+			document.getElementById(domid).style.visibility = vis;
+		{% endfor %}
+		$('#no-result-alert').css('display',no_results?"block":"none");
+	};
+	// document.ready = function(){
+
+	// };
+	
+	var generate_passwords = function(spinner)
+	{
+		// retrieve constraints
+		var availChars = '';
+		var letters = 'qwertyuiopasdfghjklzxcvbnm';
+		var numbers = '1234567890';
+		var puns = '!@#$%^&*(){}\\;\'\"[],./<>?';
+		if (document.getElementById('lowercase-con').checked)
+		{
+			availChars += (letters);
+		}
+		if (document.getElementById('uppercase-con').checked)
+		{
+			availChars += (letters.toUpperCase());
+		}
+		if (document.getElementById('number-con').checked)
+		{
+			availChars += (numbers);
+		}
+		if (document.getElementById('punctuation-con').checked)
+		{
+			availChars += (puns);
+		}
+		var pwLength = spinner.spinner('value');
+		var pw = '';
+		for( var i=0; i < pwLength; i++ )
+        	pw += availChars.charAt(Math.floor(Math.random() * availChars.length));
+        document.getElementById('pw-proposed').value = pw;
+	};
+	var validateConstraints = function()
+	{
+		var checkbox_ids = ['lowercase-con','uppercase-con','number-con','punctuation-con'];
+		var chekcedboxes = [];
+		for(var i in checkbox_ids)
+		{
+			var box = null;
+			if((box = document.getElementById(checkbox_ids[i])).checked)
+			{
+				chekcedboxes.push(box);
+			}
+		}
+		if(chekcedboxes.length == 1)
+		{
+			chekcedboxes[0].disabled = true;
+		}
+		// check all boxes if none of them is checked (which should be impossible...)
+		else if (chekcedboxes.length == 0)
+		{	for(var i in checkbox_ids)
+			{
+				document.getElementById(checkbox_ids[i]).checked = true;
+			}
+		}
+		else // enable all disabled boxes
+		{
+			for(var i in checkbox_ids)
+			{
+				var box = null;
+				if((box = document.getElementById(checkbox_ids[i])).disabled)
+				{
+					box.disabled = false;
+				}
+			}
+		}
+	};
+	var showPasswordForm = function()
+	{
+		var dialog = bootbox.dialog({
+		    title: 'Create a password',
+		    message: "<form id='pw-form' method='post' action='create'>\
+			    	<div class='form-group'>\
+			    		<label for='pw-name'>Name: (required)</label>\
+			    		<input type='text' class='form-control' id='pw-name' required>\
+				    </div>\
+				    <div class='form-group'>\
+				    	<label for='pw-proposed'>Proposed Password:</label>\
+				    	<input type='text' class='form-control' id='pw-proposed' readonly required>\
+				    </div>\
+					<div class='form-group'>\
+				    	<label for='pw-length'>Password Length:</label>\
+				    	<input id='pw-length' value='10' class='con'>\
+				    </div>\
+				    <div class='form-group'>\
+				    	<label>Password should consist of: </label>\
+				    	<div class='form-horizontal'>\
+					    	<div class='checkbox'>\
+							  <label><input class='con' id='lowercase-con' type='checkbox' value='' checked>Lowercase letters</label>\
+							</div>\
+							<div class='checkbox'>\
+							  <label><input class='con' id='uppercase-con' type='checkbox' value='' checked>Uppercase letters</label>\
+							</div>\
+							<div class='checkbox'>\
+							  <label><input class='con' id='number-con' type='checkbox' value='' checked>Numbers</label>\
+							</div>\
+							<div class='checkbox'>\
+							  <label><input class='con' id='punctuation-con' type='checkbox' value='' checked '>Punctuations</label>\
+							</div>\
+						</div>\
+					</div>\
+			    </form>",
+
+		    buttons: {
+		        cancel: {
+		            label: 'Cancel',
+		            className: "fa fa-times"
+		        },
+		        confirm: {
+		            label: 'Confirm',
+		            className:'fa fa-check',
+		            callback: function()
+		            {
+		            	$('#pw-form').submit();
+		            	return false;
+		            }
+		        }
+    		}
+		});
+
+		var spinner = $('#pw-length').spinner({
+			min: 1,
+			stop: function(event,spinner)
+			{
+				generate_passwords($(this));
+			}
+		});
+		$('input.con').click(function()
+		{
+			validateConstraints();
+			generate_passwords(spinner);
+		});
+
+		$('#pw-proposed').click(function()
+		{
+			generate_passwords(spinner);
+		});
+
+		// for first time pop-up
+		if($('#pw-proposed').val().length == 0)
+		{
+			generate_passwords(spinner);
+		}
+        
+        $('#pw-form').submit(function(event)
+		{
+			console.log('submit form');
+		});
+		$('#pw-form').validate();
+
+	};
+	// real work here
+	$('#create-pw-btn').click(function()
+	{
+		showPasswordForm();
+	});
+
+	$('#search-field').change(function()
+	{
+		filterPassword();
+	});
+
+	// filter list of password to trigger the "no passwords found", if it should be triggered
+	filterPassword();
+});
+</script>
+
+<div class="navbar navbar-default navbar-static-top">
+	<div class="navbar-header">
+	    <a href="#" class="navbar-brand">Password Manager</a>
+	</div>
+
+    <div class="collapse navbar-collapse">
+	    <ul class="nav navbar-nav">
+	        <li><a id='create-pw-btn'>Create Password</a></li>
+	    </ul>
+	    <form class="navbar-form navbar-left">
+	        <div class="form-group">
+	          <input  type="text" class="form-control" placeholder="Search Password" id="search-field">
+	        </div>
+      	</form>
+    </div>
+</div>
+{% if passwords %}
+<div class="alert alert-info" role="alert" id="no-result-alert" style="display: none">
+  <strong>No results found</strong>
+</div>
+<div class="list-group">
+	{% for p in passwords %}
+	<a href="#" class="list-group-item list-group-item-action flex-column align-items-start" id={{p.name}}>
+	    <div class="d-flex w-100 justify-content-between">
+		      <h5 class="mb-1">{{p.name}}</h5>
+		      <small>{{p.date_created | timesince}}</small>
+	    </div>
+	    <small>{{p.password | description}}</small>
+    	<!-- <p class="mb-1">{{p.password}}</p> -->
+    <!-- <small>Donec id elit non mi porta.</small> -->
+  	</a>
+  	{% endfor %}
+{% else %}
+	<div class="alert alert-info" role="alert" id="no-password">
+  		<strong>No passwords found!</strong> Press "Create Password" above to create your first password!
+	</div>
+{% endif %}
