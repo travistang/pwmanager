@@ -17,3 +17,8 @@ def description(p):
 	if re.search('[!@#$%^&*()\{\}\\;\'\"\[\],./<>?]',p): attr.append('punctuations')
 	desc += ', '.join(attr)
 	return desc
+
+def json_friendly(pw):
+	pw['date_created'] = str(timezone.now() - pw['date_created']).split(',')[0]
+	pw['description'] = description(pw['password'])
+	return pw

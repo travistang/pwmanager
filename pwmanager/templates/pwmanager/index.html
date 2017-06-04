@@ -16,8 +16,10 @@
 
 <script>
 $(function(){
+	// TODO: correct me
 	var filterPassword = function()
 	{
+		if($('a.list-group-item').length == 0) return;
 		var query = document.getElementById('search-field').value;
 		var no_results = true;
 		{% for p in passwords %}
@@ -32,7 +34,21 @@ $(function(){
 	// document.ready = function(){
 
 	// };
-	
+	var add_password_entry = function(pw)
+	{
+		var name = pw['name'];
+		var password_description = pw['description'];
+		var date_created = pw['date_created'];
+		var ele = ''
+			.concat('<a href="#" class="list-group-item list-group-item-action flex-column align-items-start" id="' + name + '">')
+			.concat('<div class="d-flex w-100 justify-content-between">')
+			.concat('<h5 class="mb-1">'+ name + '</h5>')
+		    .concat('<small>'+ date_created + '</small>')
+		    .concat('</div>')
+		    .concat('<small>'+password_description + '</small>')
+		    .concat('</a>');
+	    $('#pw-list').append(ele);
+	};
 	var generate_passwords = function(spinner)
 	{
 		// retrieve constraints
@@ -195,6 +211,7 @@ $(function(){
 			{
 				// handle response
 				console.log(response);
+				add_password_entry(response['text']);
 			});
 			// return false;
 		});
@@ -215,11 +232,18 @@ $(function(){
 	// filter list of password to trigger the "no passwords found", if it should be triggered
 	filterPassword();
 
-	var socket = new WebSocket('ws://' + window.location.host + '/pwmanager/list');
+	var socket = new WebSocket('ws://' + window.location.host + '/pwmanager');
     socket.onopen = function open() {
       console.log('WebSockets connection created.');
+      socket.send(JSON.stringify('pw_list'));
     };
-
+    socket.onmessage = function message(event)
+    {
+    	// TODO: what about other evenss?
+    	var pw = JSON.parse(event.data);
+    	console.log(pw);
+    	add_password_entry(pw);
+    };
     if (socket.readyState == WebSocket.OPEN) {
       socket.onopen();
     }
@@ -247,18 +271,19 @@ $(function(){
 <div class="alert alert-info" role="alert" id="no-result-alert" style="display: none">
   <strong>No results found</strong>
 </div>
-<div class="list-group">
-	{% for p in passwords %}
+<div class="list-group" id='pw-list'>
+{% verbatim %}
+<!-- 	{% for p in passwords %}
 	<a href="#" class="list-group-item list-group-item-action flex-column align-items-start" id={{p.name}}>
 	    <div class="d-flex w-100 justify-content-between">
 		      <h5 class="mb-1">{{p.name}}</h5>
 		      <small>{{p.date_created | timesince}}</small>
 	    </div>
 	    <small>{{p.password | description}}</small>
-    	<!-- <p class="mb-1">{{p.password}}</p> -->
-    <!-- <small>Donec id elit non mi porta.</small> -->
   	</a>
-  	{% endfor %}
+  	{% endfor %} -->
+  	{% endverbatim %}
+</div>
 {% else %}
 	<div class="alert alert-info" role="alert" id="no-password">
   		<strong>No passwords found!</strong> Press "Create Password" above to create your first password!
