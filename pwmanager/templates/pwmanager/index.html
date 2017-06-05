@@ -11,25 +11,38 @@
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.16.0/jquery.validate.min.js"></script>
-
-
+<scipt src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.3.0/js/mdb.min.js"></scipt>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.3.0/css/
+mdb.min.css"/>
+<script src='//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js'></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css"/>
 
 <script>
 $(function(){
+	var my_passwords = [];
 	// TODO: correct me
 	var filterPassword = function()
 	{
-		if($('a.list-group-item').length == 0) return;
-		var query = document.getElementById('search-field').value;
-		var no_results = true;
-		{% for p in passwords %}
-			var domid = "{{p.name}}";
-
-			var vis = (domid.indexOf(query) !== -1 || query.length == 0)?"visible":"hidden";
-			if (vis == 'visible') no_results = false;
-			document.getElementById(domid).style.visibility = vis;
-		{% endfor %}
-		$('#no-result-alert').css('display',no_results?"block":"none");
+		if(my_passwords.length == 0) return; // none of this function's business
+		$('#pw-list').html(''); // empty the search result
+		var query = $('#search-field').val();
+		var has_result = false;
+		for(var i in my_passwords)
+		{
+			if(my_passwords[i].name.indexOf(query) !== -1 || query.length == 0)
+			{
+				has_result = true;
+				add_password_entry(my_passwords[i]);
+			}
+		}
+		$('#no-result-alert').css('display',has_result?"none":"block");
+		$('a.list-group-item').mouseenter(function(){
+			$(this).find('.delete-btn').css('display','block');
+		});
+		$('a.list-group-item').mouseleave(function()
+		{
+			$(this).find('.delete-btn').css('display','none');
+		});
 	};
 	// document.ready = function(){
 
@@ -43,6 +56,7 @@ $(function(){
 			.concat('<a href="#" class="list-group-item list-group-item-action flex-column align-items-start" id="' + name + '">')
 			.concat('<div class="d-flex w-100 justify-content-between">')
 			.concat('<h5 class="mb-1">'+ name + '</h5>')
+			.concat('<button class="btn btn-danger pull-right delete-btn btn-sm" style="display:none" id=' + name +'-delete-btn>delete</button>')
 		    .concat('<small>'+ date_created + '</small>')
 		    .concat('</div>')
 		    .concat('<small>'+password_description + '</small>')
@@ -155,12 +169,11 @@ $(function(){
 		            className: "fa fa-times"
 		        },
 		        confirm: {
-		            label: 'Confirm',
-		            className:'fa fa-check',
+		            label: 'Create Password',
+		            className:'btn-success',
 		            callback: function()
 		            {
 		            	$('#pw-form').submit();
-		            	return false;
 		            }
 		        }
     		}
@@ -209,9 +222,9 @@ $(function(){
 				data: formData
 			}).success(function(response,status,xhr)
 			{
-				// handle response
-				console.log(response);
 				add_password_entry(response['text']);
+				toastr.success('Password added');
+				bootbox.hideAll();
 			});
 			// return false;
 		});
@@ -230,7 +243,7 @@ $(function(){
 	});
 
 	// filter list of password to trigger the "no passwords found", if it should be triggered
-	filterPassword();
+	// filterPassword();
 
 	var socket = new WebSocket('ws://' + window.location.host + '/pwmanager');
     socket.onopen = function open() {
@@ -241,8 +254,10 @@ $(function(){
     {
     	// TODO: what about other evenss?
     	var pw = JSON.parse(event.data);
-    	console.log(pw);
+    	my_passwords.push(pw);
     	add_password_entry(pw);
+
+    	filterPassword();
     };
     if (socket.readyState == WebSocket.OPEN) {
       socket.onopen();

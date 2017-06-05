@@ -25,6 +25,7 @@ def index(request):
 	return render(request,'pwmanager/index.html',context)
 
 def create(request):
+	print(request)
 	req_dict = parse_qs(request.body)
 	response = {}
 	# TODO: how about csrf token?
@@ -33,8 +34,6 @@ def create(request):
 	else:
 		pw = req_dict[b'pw-proposed'][0].decode('utf-8')
 		name = req_dict[b'pw-name'][0].decode('utf-8')
-		print(pw)
-		print(name)
 		# create object and store the data
 		pw_entry = Password(name = name,password = pw)
 		pw_entry.save()

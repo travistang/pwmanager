@@ -29,13 +29,6 @@ def ws_message(message):
 			message.reply_channel.send({
 					'text': json.dumps(pw)
 			})		
-	# message.reply_channel.send({
-	#     "text": message.content['text'],
-	# })
-
-
-
-
 
 def ws_disconnect(message):
     Group('users').discard(message.reply_channel)
