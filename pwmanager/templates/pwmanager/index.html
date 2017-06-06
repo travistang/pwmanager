@@ -12,8 +12,10 @@
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.16.0/jquery.validate.min.js"></script>
 <scipt src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.3.0/js/mdb.min.js"></scipt>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.7.0/js/md5.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.3.0/css/
 mdb.min.css"/>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js'></script>
 <script src='//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js'></script>
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css"/>
 
@@ -43,6 +45,14 @@ $(function(){
 		{
 			$(this).find('.delete-btn').css('display','none');
 		});
+
+		// clipboard stuff 
+		new Clipboard('a.list-group-item',{
+			text: function(trigger)
+			{
+				return trigger.previousElementSibling.getAttribute('value');
+			}
+		});
 	};
 	// document.ready = function(){
 
@@ -50,18 +60,27 @@ $(function(){
 	var add_password_entry = function(pw)
 	{
 		var name = pw['name'];
+		var hash = md5(name);
 		var password_description = pw['description'];
 		var date_created = pw['date_created'];
 		var ele = ''
-			.concat('<a href="#" class="list-group-item list-group-item-action flex-column align-items-start" id="' + name + '">')
+			.concat('<p style="display: none" class="' + hash + '"></p>')
+			.concat('<a href="#" class="list-group-item list-group-item-action flex-column align-items-start" id="' + hash + '">')
 			.concat('<div class="d-flex w-100 justify-content-between">')
 			.concat('<h5 class="mb-1">'+ name + '</h5>')
-			.concat('<button class="btn btn-danger pull-right delete-btn btn-sm" style="display:none" id=' + name +'-delete-btn>delete</button>')
+			.concat('<button class="btn btn-danger pull-right delete-btn btn-sm" style="display:none" id=' + hash +'-delete-btn>delete</button>')
 		    .concat('<small>'+ date_created + '</small>')
 		    .concat('</div>')
 		    .concat('<small>'+password_description + '</small>')
 		    .concat('</a>');
+
 	    $('#pw-list').append(ele);
+	    $('p.' + hash).attr('value',pw['password']);
+
+		$('#' + hash).click(function()
+		{
+			toastr.success('Password copied to clipboard');
+		});
 	};
 	var generate_passwords = function(spinner)
 	{
@@ -186,6 +205,7 @@ $(function(){
 				generate_passwords($(this));
 			}
 		});
+
 		$('input.con').click(function()
 		{
 			validateConstraints();
@@ -223,11 +243,13 @@ $(function(){
 			}).success(function(response,status,xhr)
 			{
 				add_password_entry(response['text']);
-				toastr.success('Password added');
+				toastr.info('Password added');
 				bootbox.hideAll();
 			});
 			// return false;
 		});
+
+
 		$('#pw-form').validate();
 
 	};
@@ -252,8 +274,13 @@ $(function(){
     };
     socket.onmessage = function message(event)
     {
-    	// TODO: what about other evenss?
+    	// TODO: what about other evens?
     	var pw = JSON.parse(event.data);
+    	// if('deleted' in pw)
+    	// {
+    	// 	// a deleting message
+    	// 	$.remove('#' + pw['deleted']['name'])
+    	// }
     	my_passwords.push(pw);
     	add_password_entry(pw);
 

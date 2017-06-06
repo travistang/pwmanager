@@ -16,6 +16,9 @@ def get_all_passwords():
 	return res
 def send_password(obj):
 	Group('users').send({'text':json.dumps(json_friendly(obj))})
+# TODO: correct me?
+def send_delete_notice(obj):
+	Group('users').send({'deleted':json.dumps(json_friendly(obj))})
 # Create your views here.
 def index(request):
 	passwords = Password.objects.order_by('-name')
@@ -24,6 +27,22 @@ def index(request):
 	}
 	return render(request,'pwmanager/index.html',context)
 
+# TODO: correct me
+def remove(request):
+	req_dict = parse_qs(request.body)
+	response = {}
+	if b'name' not in req_dict:
+		response['status'] = 'fail'
+	else:
+		name = req_dict[b'name'][0].decode('utf-8')
+		pw_entry = Password.objects.get(name = name)
+		if not pw_entry:
+			response['status'] = 'fail'
+		else:
+			pw_entry.delete()
+			response['status'] = 'ok'
+	send_delete_notice(name)
+	return JsonResponse(response)
 def create(request):
 	print(request)
 	req_dict = parse_qs(request.body)
