@@ -2,7 +2,7 @@
 {% load static %}
 {% load bootstrap3 %}
 {% load password_filters %}
-
+{% csrf_token %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 
 {% bootstrap_css %}
@@ -18,7 +18,7 @@ mdb.min.css"/>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js'></script>
 <script src='//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js'></script>
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css"/>
-
+<script src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.4/js.cookie.min.js'></script>
 <script>
 $(function(){
 	var my_passwords = [];
@@ -66,10 +66,10 @@ $(function(){
 		var ele = ''
 			.concat('<p style="display: none" class="' + hash + '"></p>')
 			.concat('<a href="#" class="list-group-item list-group-item-action flex-column align-items-start" id="' + hash + '">')
+			.concat('<button class="btn btn-danger pull-right delete-btn btn-sm" style="display:none" id=' + hash +'-delete-btn>delete</button>')
 			.concat('<div class="d-flex w-100 justify-content-between">')
 			.concat('<h5 class="mb-1">'+ name + '</h5>')
-			.concat('<button class="btn btn-danger pull-right delete-btn btn-sm" style="display:none" id=' + hash +'-delete-btn>delete</button>')
-		    .concat('<small>'+ date_created + '</small>')
+			.concat('<small>'+ date_created + '</small>')
 		    .concat('</div>')
 		    .concat('<small>'+password_description + '</small>')
 		    .concat('</a>');
@@ -80,6 +80,32 @@ $(function(){
 		$('#' + hash).click(function()
 		{
 			toastr.success('Password copied to clipboard');
+		});
+		$('#' + hash + '-delete-btn').click(function()
+		{
+			var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+			console.log(csrftoken);
+
+			$.ajaxSetup({
+				type: 'POST',
+				url: 'remove',
+				beforeSend: function(xhr,settings)
+				{
+					xhr.setRequestHeader("X-CSRFToken", csrftoken);
+				}
+			});
+			$.ajax({
+				data: JSON.stringify({name: name})
+			}).success(function(response,status,xhr)
+			{
+				if (response['status'] == 'ok')
+				{
+					toastr.success('Password deleted');
+				}else
+				{
+					toastr.error('Unable to remove password');
+				}
+			});
 		});
 	};
 	var generate_passwords = function(spinner)
@@ -150,7 +176,7 @@ $(function(){
 	{
 		var dialog = bootbox.dialog({
 		    title: 'Create a password',
-		    message: "<form id='pw-form' method='post' action='create'>{% csrf_token %}\
+		    message: "<form id='pw-form' method='post' action='create'>\
 			    	<div class='form-group'>\
 			    		<label for='pw-name'>Name: (required)</label>\
 			    		<input type='text' class='form-control' id='pw-name' name='pw-name' required>\
@@ -274,16 +300,36 @@ $(function(){
     };
     socket.onmessage = function message(event)
     {
-    	// TODO: what about other evens?
     	var pw = JSON.parse(event.data);
-    	// if('deleted' in pw)
-    	// {
-    	// 	// a deleting message
-    	// 	$.remove('#' + pw['deleted']['name'])
-    	// }
-    	my_passwords.push(pw);
-    	add_password_entry(pw);
+    	console.log(pw);
+    	if('action' in pw)
+    	{
+    		// then "pw" should be with form {'action','deleted',}
+    		// a deleting message
+    		$('#' + pw['name']).remove();
+    		for(var i in my_passwords)
+    		{
+    			var cur_pw = my_passwords[i];
+    			if(cur_pw.name == pw['name'])
+    			{
+    				if (i == 0)
+    				{
+    					my_passwords = my_passwords.slice(1);
+    				}else
+    				{
+    					my_passwords = my_passwords.slice(0,i).concat(my_passwords.slice(i + 1));
+    				}
+    				break;
+    			}
+    		}
 
+    	}else
+    	{
+	    	my_passwords.push(pw);
+	    	add_password_entry(pw);
+				
+    	}
+    	// refresh the password list
     	filterPassword();
     };
     if (socket.readyState == WebSocket.OPEN) {
@@ -314,17 +360,7 @@ $(function(){
   <strong>No results found</strong>
 </div>
 <div class="list-group" id='pw-list'>
-{% verbatim %}
-<!-- 	{% for p in passwords %}
-	<a href="#" class="list-group-item list-group-item-action flex-column align-items-start" id={{p.name}}>
-	    <div class="d-flex w-100 justify-content-between">
-		      <h5 class="mb-1">{{p.name}}</h5>
-		      <small>{{p.date_created | timesince}}</small>
-	    </div>
-	    <small>{{p.password | description}}</small>
-  	</a>
-  	{% endfor %} -->
-  	{% endverbatim %}
+
 </div>
 {% else %}
 	<div class="alert alert-info" role="alert" id="no-password">
