@@ -60,19 +60,22 @@ def create(request):
 		name = req_dict[b'pw-name'][0].decode('utf-8')
 		if not Password.objects.filter(name = name).exists():
 			# create object and store the data
-			pw_entry = Password(name = name,password = pw)
-			pw_entry.save()
 			if len(pw) == 0 or len(name) == 0:
 				response['status'] = 'fail'
 			else:
 				response['status'] = 'ok'
-			# how about the channel...?
-			send_password(model_to_dict(pw_entry))
+				pw_entry = Password(name = name,password = pw)
+				pw_entry.save()
+				send_password(model_to_dict(pw_entry))
 		else:
 			# modify existing object and store the data
-			cur_pw = Password.objects.get(name = name)
-			cur_pw.password = pw
-			cur_pw.save()
-			response['status'] = 'ok'
-			send_modify_notice({'action': 'modified','updated_pw':json_friendly(model_to_dict(cur_pw))})
+
+			if len(pw) == 0:
+				response['status'] = 'fail'
+			else:
+				response['status'] = 'ok'
+				cur_pw = Password.objects.get(name = name)
+				cur_pw.password = pw
+				cur_pw.save()
+				send_modify_notice({'action': 'modified','updated_pw':json_friendly(model_to_dict(cur_pw))})
 	return JsonResponse(response)
