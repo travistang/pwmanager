@@ -39,11 +39,11 @@ $(function(){
 		}
 		$('#no-result-alert').css('display',has_result?"none":"block");
 		$('a.list-group-item').mouseenter(function(){
-			$(this).find('.delete-btn').css('display','block');
+			$(this).find('.option-btn').css('display','block');
 		});
 		$('a.list-group-item').mouseleave(function()
 		{
-			$(this).find('.delete-btn').css('display','none');
+			$(this).find('.option-btn').css('display','none');
 		});
 
 		// clipboard stuff 
@@ -66,7 +66,9 @@ $(function(){
 		var ele = ''
 			.concat('<p style="display: none" class="' + hash + '"></p>')
 			.concat('<a href="#" class="list-group-item list-group-item-action flex-column align-items-start" id="' + hash + '">')
-			.concat('<button class="btn btn-danger pull-right delete-btn btn-sm" style="display:none" id=' + hash +'-delete-btn>delete</button>')
+			.concat('<button class="btn btn-danger pull-right option-btn btn-sm" style="display:none" id=' + hash +'-delete-btn>delete</button>')
+			.concat('<button class="btn btn-default pull-right option-btn btn-sm" style="display:none" id=' + hash +'-modify-btn>modify</button>')
+			
 			.concat('<div class="d-flex w-100 justify-content-between">')
 			.concat('<h5 class="mb-1">'+ name + '</h5>')
 			.concat('<small>'+ date_created + '</small>')
@@ -81,11 +83,18 @@ $(function(){
 		{
 			toastr.success('Password copied to clipboard');
 		});
-		$('#' + hash + '-delete-btn').click(function()
-		{
-			var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
-			console.log(csrftoken);
 
+		$('#' + hash + '-modify-btn').click(function(event)
+		{
+			event.stopPropagation(); // do not trigger the copy event underneath
+			var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+			showPasswordForm(pw);
+		});
+		
+		$('#' + hash + '-delete-btn').click(function(event)
+		{
+			event.stopPropagation(); // do not trigger the copy event underneath
+			var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
 			$.ajaxSetup({
 				type: 'POST',
 				url: 'remove',
@@ -172,10 +181,11 @@ $(function(){
 			}
 		}
 	};
-	var showPasswordForm = function()
+	var showPasswordForm = function(pw)
 	{
+		var dialogTitle = (pw == null)?'Create a password':'Modify '.concat(pw['name']);
 		var dialog = bootbox.dialog({
-		    title: 'Create a password',
+		    title: dialogTitle,
 		    message: "<form id='pw-form' method='post' action='create'>\
 			    	<div class='form-group'>\
 			    		<label for='pw-name'>Name: (required)</label>\
@@ -214,7 +224,7 @@ $(function(){
 		            className: "fa fa-times"
 		        },
 		        confirm: {
-		            label: 'Create Password',
+		            label: (pw == null)?'Create Password':'Update Password',
 		            className:'btn-success',
 		            callback: function()
 		            {
@@ -269,23 +279,36 @@ $(function(){
 			}).success(function(response,status,xhr)
 			{
 				add_password_entry(response['text']);
-				toastr.info('Password added');
+				toastr.info((pw == null)?'Password added':'Password updated');
 				bootbox.hideAll();
 			});
 			// return false;
 		});
 
+        if (pw != null)
+        {
+        	/* TODO:
+        		1. set current password as field
+        		2. change toaster msg
+        		3. set name "readonly"
+        		4. set spinner value as the length of the value
+        		5. set checkbox according to the current password
+        	*/
+        	$('#pw-proposed').val(pw['password']);
+        	$('#pw-name').attr('readonly',true).val(pw['name']);
+        	spinner.spinner('value',pw['password'].length);
 
+        }
 		$('#pw-form').validate();
 
-	};
+	}; // showPasswordForm
 	// real work here
 	$('#create-pw-btn').click(function()
 	{
-		showPasswordForm();
+		showPasswordForm(null);
 	});
 
-	$('#search-field').change(function()
+	$('#search-field').on('input',function()
 	{
 		filterPassword();
 	});
@@ -302,15 +325,25 @@ $(function(){
     {
     	var pw = JSON.parse(event.data);
     	console.log(pw);
-    	if('action' in pw)
+    	if('action' in pw) // either delete or modify
     	{
-    		// then "pw" should be with form {'action','deleted',}
-    		// a deleting message
-    		$('#' + pw['name']).remove();
+    		// both modification and deletion of passwords require the corresponding table entry to be removed
+    		var pw_name = null;
+    		if(pw['action'] == 'deleted')
+    		{
+    			pw_name = pw['name'];
+    			$('#' + md5(pw['name'])).remove();
+
+    		}else
+    		{
+    			pw_name = pw['updated_pw']['name'];
+    			$('#' + md5(pw['updated_pw']['name'])).remove();
+    		}
+    		// $('#' + pw['name']).remove();
     		for(var i in my_passwords)
     		{
     			var cur_pw = my_passwords[i];
-    			if(cur_pw.name == pw['name'])
+    			if(cur_pw.name == pw_name)
     			{
     				if (i == 0)
     				{
@@ -321,13 +354,27 @@ $(function(){
     				}
     				break;
     			}
+    		}    
+    		// the following code is for modification task			
+			if(pw['action'] == 'modified')
+    		{
+    			//TDOO: modification task
+    			//TODO: find and locate corresponding entry in javascript, update the new password
+    			//TODO: update the value of the corresponding element
+    			$('#' + md5(pw['updated_pw']['name'])).unbind().remove();
+    			pw = pw['updated_pw'];
+    			my_passwords.push(pw);
+    			add_password_entry(pw);
+    			toastr.success('Password ' + pw_name + ' is updated');
+    		}else
+    		{
+    			toastr.success('Password ' + pw_name + ' is deleted');
     		}
-
     	}else
     	{
+    		// create password action
 	    	my_passwords.push(pw);
 	    	add_password_entry(pw);
-				
     	}
     	// refresh the password list
     	filterPassword();

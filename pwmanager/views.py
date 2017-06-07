@@ -16,9 +16,14 @@ def get_all_passwords():
 	return res
 def send_password(obj):
 	Group('users').send({'text':json.dumps(json_friendly(obj))})
-# TODO: correct me?
+
 def send_delete_notice(obj):
 	print('sending notice:',json.dumps(obj))
+	Group('users').send({'text':json.dumps(obj)})
+
+# TODO: working on this
+def send_modify_notice(obj):
+	print ('sending modification notice',json.dumps(obj))
 	Group('users').send({'text':json.dumps(obj)})
 # Create your views here.
 def index(request):
@@ -28,11 +33,9 @@ def index(request):
 	}
 	return render(request,'pwmanager/index.html',context)
 
-# TODO: correct me
 def remove(request):
 	request = request.body.decode('utf-8')
 	req_dict = json.loads(request)
-	print(request)
 	response = {}
 	if 'name' not in req_dict:
 		response['status'] = 'fail'
@@ -44,25 +47,32 @@ def remove(request):
 		else:
 			pw_entry.delete()
 			response['status'] = 'ok'
-		send_delete_notice({'action': 'deleted','name':name})
+			send_delete_notice({'action': 'deleted','name':name})
 	return JsonResponse(response)
 def create(request):
 	print(request)
 	req_dict = parse_qs(request.body)
 	response = {}
-	# TODO: how about csrf token?
 	if b'pw-proposed' not in req_dict or b'pw-name' not in req_dict:
 		response['status'] = 'fail'
 	else:
 		pw = req_dict[b'pw-proposed'][0].decode('utf-8')
 		name = req_dict[b'pw-name'][0].decode('utf-8')
-		# create object and store the data
-		pw_entry = Password(name = name,password = pw)
-		pw_entry.save()
-		if len(pw) == 0 or len(name) == 0:
-			response['status'] = 'fail'
+		if not Password.objects.filter(name = name).exists():
+			# create object and store the data
+			pw_entry = Password(name = name,password = pw)
+			pw_entry.save()
+			if len(pw) == 0 or len(name) == 0:
+				response['status'] = 'fail'
+			else:
+				response['status'] = 'ok'
+			# how about the channel...?
+			send_password(model_to_dict(pw_entry))
 		else:
+			# modify existing object and store the data
+			cur_pw = Password.objects.get(name = name)
+			cur_pw.password = pw
+			cur_pw.save()
 			response['status'] = 'ok'
-		# how about the channel...?
-		send_password(model_to_dict(pw_entry))
+			send_modify_notice({'action': 'modified','updated_pw':json_friendly(model_to_dict(cur_pw))})
 	return JsonResponse(response)
