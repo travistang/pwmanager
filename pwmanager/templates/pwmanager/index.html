@@ -19,10 +19,34 @@ mdb.min.css"/>
 <script src='//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js'></script>
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css"/>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.4/js.cookie.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js'></script>
 <script>
 $(function(){
 	var my_passwords = [];
-	// TODO: correct me
+	var showQRCode = function()
+	{
+		$.ajax(
+		{
+			method: 'POST',
+			url: 'add_device_request',
+			beforeSend: function(xhr,settings)
+			{
+				var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+				xhr.setRequestHeader("X-CSRFToken", csrftoken);
+			}
+
+		}).success(function(response,status,xhr)
+		{
+			var dialog = bootbox.dialog({
+				title: 'Add a new device',
+				message: '<p> Open your password app and scan the following QR code with it</p>'
+				.concat('<div id="qr-code"></div>')
+			});
+
+			$('#qr-code').qrcode(response['code']);			
+		});
+
+	}
 	var filterPassword = function()
 	{
 		if(my_passwords.length == 0) return; // none of this function's business
@@ -308,6 +332,10 @@ $(function(){
 		showPasswordForm(null);
 	});
 
+	$('#add-device-btn').click(function()
+	{
+		showQRCode();
+	})
 	$('#search-field').on('input',function()
 	{
 		filterPassword();
@@ -385,7 +413,7 @@ $(function(){
 
 });
 </script>
-
+<title> Password Manager</title>
 <div class="navbar navbar-default navbar-static-top">
 	<div class="navbar-header">
 	    <a href="#" class="navbar-brand">Password Manager</a>
@@ -394,6 +422,7 @@ $(function(){
     <div class="collapse navbar-collapse">
 	    <ul class="nav navbar-nav">
 	        <li><a id='create-pw-btn'>Create Password</a></li>
+	        <li><a id='add-device-btn'>Add Mobile Device</a></li>
 	    </ul>
 	    <form class="navbar-form navbar-left">
 	        <div class="form-group">

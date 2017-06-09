@@ -1,11 +1,12 @@
 from django.shortcuts import render
 from django.http import HttpResponse,JsonResponse
 from django.template import loader
-from .models import Password
+from .models import Password, PendingDeviceRequest
 from .templatetags.password_filters import json_friendly
 from urllib.parse import parse_qs
 from pusherable.mixins import PusherDetailMixin
 from django.forms.models import model_to_dict
+from django.core.serializers import serialize
 from channels import Group
 import json
 # helper functions
@@ -21,7 +22,13 @@ def send_delete_notice(obj):
 	print('sending notice:',json.dumps(obj))
 	Group('users').send({'text':json.dumps(obj)})
 
-# TODO: working on this
+def request_code(request):
+	# TODO: will something go wrong here?
+	pdr = PendingDeviceRequest()
+	pdr.save()
+	print(pdr.code)
+	return JsonResponse({'code':pdr.code})
+
 def send_modify_notice(obj):
 	print ('sending modification notice',json.dumps(obj))
 	Group('users').send({'text':json.dumps(obj)})
@@ -32,6 +39,12 @@ def index(request):
 		'passwords': passwords
 	}
 	return render(request,'pwmanager/index.html',context)
+
+# TODO: this
+def authorize(request,code = None):
+	if not PendingDeviceRequest.objects.filter(code = code).exists():
+		pass
+	pass
 
 def remove(request):
 	request = request.body.decode('utf-8')
@@ -79,3 +92,4 @@ def create(request):
 				cur_pw.save()
 				send_modify_notice({'action': 'modified','updated_pw':json_friendly(model_to_dict(cur_pw))})
 	return JsonResponse(response)
+
