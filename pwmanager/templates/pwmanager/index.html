@@ -344,7 +344,7 @@ $(function(){
 	// filter list of password to trigger the "no passwords found", if it should be triggered
 	// filterPassword();
 
-	var socket = new WebSocket('ws://' + window.location.host + '/pwmanager');
+	var socket = new WebSocket('ws://' + window.location.host + '/pwmanager/socket');
     socket.onopen = function open() {
       console.log('WebSockets connection created.');
       socket.send(JSON.stringify('pw_list'));
