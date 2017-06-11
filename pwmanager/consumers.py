@@ -16,6 +16,7 @@ from channels.auth import http_session_user, channel_session_user, channel_sessi
 @http_session_user
 def ws_connect(message):
 	# check user's validity
+	print('receive message from ',message.user)
 	if not message.user.is_authenticated():
 		message.reply_channel.send({'accept': False})
 		return
@@ -39,8 +40,9 @@ def ws_message(message):
 # @channel_session_user
 @http_session_user
 def ws_disconnect(message):
-    Group('users').discard(message.reply_channel)
-    message.user.is_active = False
-    message.user.save()
-    # close the user's session
+	print('receive message from ',message.user)
+	Group('users').discard(message.reply_channel)
+	# message.user.is_active = False
+	# message.user.save()
+# close the user's session
 

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse,JsonResponse
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse,JsonResponse,HttpResponseRedirect
 from django.template import loader
 from .models import Password, PendingDeviceRequest
 from .templatetags.password_filters import json_friendly
@@ -7,7 +8,7 @@ from urllib.parse import parse_qs
 from pusherable.mixins import PusherDetailMixin
 from django.forms.models import model_to_dict
 from django.core.serializers import serialize
-from django.contrib.auth import authenticate as auth, login as loi
+from django.contrib.auth import authenticate as auth, login as loi,logout as loo
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from channels import Group
@@ -153,3 +154,9 @@ def login(request):
 	# render the login page
 	else:
 		return render(request,'pwmanager/login.html')
+
+def logout(request):
+	print('here')
+	if request.user.is_authenticated():
+		loo(request)
+	return HttpResponseRedirect(reverse('login'))
