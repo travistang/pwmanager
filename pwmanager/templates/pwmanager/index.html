@@ -360,10 +360,13 @@ $(function(){
     			pw_name = pw['name'];
     			$('#' + md5(pw['name'])).remove();
 
-    		}else
+    		}else if(pw['action'] == 'modified')
     		{
     			pw_name = pw['updated_pw']['name'];
     			$('#' + md5(pw['updated_pw']['name'])).remove();
+    		}else 
+    		{
+    			// ignore
     		}
     		// $('#' + pw['name']).remove();
     		for(var i in my_passwords)
@@ -392,7 +395,7 @@ $(function(){
     			my_passwords.push(pw);
     			add_password_entry(pw);
     			toastr.success('Password ' + pw_name + ' is updated');
-    		}else
+    		}else if (pw['action'] == 'deleted')
     		{
     			toastr.success('Password ' + pw_name + ' is deleted');
     		}

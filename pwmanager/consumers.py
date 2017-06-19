@@ -16,8 +16,9 @@ from channels.auth import http_session_user, channel_session_user, channel_sessi
 @http_session_user
 def ws_connect(message):
 	# check user's validity
-	print('receive message from ',message.user)
+	print('receive connection request from ',message.user)
 	if not message.user.is_authenticated():
+		print('rejecting request from',message.user)
 		message.reply_channel.send({'accept': False})
 		return
 
@@ -27,6 +28,7 @@ def ws_connect(message):
 
 @http_session_user
 def ws_message(message):
+	print('received a message',message.content['text'])
 	content = message.content['text']
 	if content.replace('\"','') == 'pw_list':
 		pws = get_all_passwords()
@@ -36,7 +38,11 @@ def ws_message(message):
 			# pw['description'] = description(pw['password'])
 			message.reply_channel.send({
 					'text': json.dumps(pw)
-			})		
+			})
+		# add a message to indicate that there are no more passwords to send
+		message.reply_channel.send({
+					'text': json.dumps({"action": "done"})
+			})
 # @channel_session_user
 @http_session_user
 def ws_disconnect(message):

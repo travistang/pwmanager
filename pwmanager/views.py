@@ -74,7 +74,6 @@ def remove(request):
 
 @login_required
 def create(request):
-	print(request)
 	req_dict = parse_qs(request.body)
 	response = {}
 	if b'pw-proposed' not in req_dict or b'pw-name' not in req_dict:
