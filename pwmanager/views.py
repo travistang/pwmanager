@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse,JsonResponse,HttpResponseRedirect
 from django.template import loader
-from .models import Password, PendingDeviceRequest
+from .models import *
 from .templatetags.password_filters import json_friendly
 from urllib.parse import parse_qs
 from pusherable.mixins import PusherDetailMixin
@@ -12,6 +12,7 @@ from django.contrib.auth import authenticate as auth, login as loi,logout as loo
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from channels import Group
+from datetime import datetime, timedelta
 import json
 import re
 # helper functions
@@ -32,7 +33,9 @@ def request_code(request):
 	# TODO: will something go wrong here?
 	pdr = PendingDeviceRequest()
 	pdr.save()
-	print(pdr.code)
+	# also invalidate all expired_code
+	expired_codes = PendingDeviceRequest.objects.filter(date_created__lt = datetime.now() - timedelta(seconds = 120))
+	expired_codes.delete()
 	return JsonResponse({'code':pdr.code})
 
 def send_modify_notice(obj):
@@ -47,12 +50,18 @@ def index(request):
 	}
 	return render(request,'pwmanager/index.html',context)
 
-# TODO: this
-@login_required
+# entry point for authenticating token
 def authorize(request,code = None):
+	print('authorization request')
 	if not PendingDeviceRequest.objects.filter(code = code).exists():
-		pass
-	pass
+		return JsonResponse({'status':'fail'})
+	# emptythe pending request
+	PendingDeviceRequest.objects.filter(code = code).delete()
+	auth = AuthorizedToken()
+	token = auth.token
+	auth.save()
+	return JsonResponse({'status':'ok','token':token})
+
 
 @login_required
 def remove(request):

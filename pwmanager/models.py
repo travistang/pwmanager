@@ -22,10 +22,15 @@ class Password(models.Model):
 
 class PendingDeviceRequest(models.Model):
 	code = models.CharField(max_length = 256,primary_key = True,default = random_code)
-	verified = models.BooleanField(default = False)
-
+	# verified = models.BooleanField(default = False)
+	date_created = models.DateTimeField(default = timezone.now)
 	def __str__(self):
 		return self.code
 	def verify(self):
 		self.verified = True
 		self.save()
+
+class AuthorizedToken(models.Model):
+	token = models.CharField(max_length = 256,primary_key = True,default = random_code)
+	def __str__(self):
+		return self.code
