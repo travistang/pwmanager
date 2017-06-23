@@ -50,16 +50,14 @@ def index(request):
 	}
 	return render(request,'pwmanager/index.html',context)
 
-# entry point for authenticating token
+# entry point for mobile apps authorization
 def authorize(request,code = None):
 	print('authorization request')
 	if not PendingDeviceRequest.objects.filter(code = code).exists():
 		return JsonResponse({'status':'fail'})
 	# emptythe pending request
 	PendingDeviceRequest.objects.filter(code = code).delete()
-	auth = AuthorizedToken()
-	token = auth.token
-	auth.save()
+	token = AuthorizedToken.create_and_get_token(None) # never expires
 	return JsonResponse({'status':'ok','token':token})
 
 

@@ -32,5 +32,17 @@ class PendingDeviceRequest(models.Model):
 
 class AuthorizedToken(models.Model):
 	token = models.CharField(max_length = 256,primary_key = True,default = random_code)
+	expiry_date = models.DateTimeField(null = True, default = None)
 	def __str__(self):
-		return self.code
+		return self.token
+
+	@staticmethod
+	def create_and_get_token(expiry_date = None):
+		auth = AuthorizedToken(expiry_date = expiry_date)
+		token = auth.token
+		auth.save()
+		return token
+
+	@staticmethod
+	def is_valid_token(token):
+		return AuthorizedToken.objects.filter(expiry_date__st = timezone.now,token = token).exists()

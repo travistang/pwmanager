@@ -23,6 +23,7 @@ mdb.min.css"/>
 <script>
 $(function(){
 	var my_passwords = [];
+	var session_token = undefined;
 	var showQRCode = function()
 	{
 		$.ajax(
@@ -344,7 +345,6 @@ $(function(){
 	var socket = new WebSocket('ws://' + window.location.host + '/pwmanager/socket?session_key={{request.session.session_key}}');
     socket.onopen = function open() {
       console.log('WebSockets connection created.');
-      socket.send(JSON.stringify('pw_list'));
     };
 
     socket.onmessage = function message(event)
@@ -399,11 +399,17 @@ $(function(){
     		{
     			toastr.success('Password ' + pw_name + ' is deleted');
     		}
-    	}else
+    	}else if( !('token' in pw))
     	{
     		// create password action
+    		console.log("pushing pw");
 	    	my_passwords.push(pw);
 	    	add_password_entry(pw);
+    	}else
+    	{
+    		session_token = pw['token'];
+			var request = JSON.stringify({'action':'pw_list','session_key':session_token});
+			socket.send(request);
     	}
     	// refresh the password list
     	filterPassword();

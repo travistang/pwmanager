@@ -23,7 +23,7 @@ urlpatterns = [
 
 # django channels
 channel_routing = [
-	route("websocket.connect", "pwmanager.consumers.ws_connect",path=r'^/pwmanager/socket'),
+	route("websocket.connect", "pwmanager.consumers.ws_connect"),
 	route("websocket.disconnect", "pwmanager.consumers.ws_disconnect"),
 	route("websocket.receive", "pwmanager.consumers.ws_message"),
 ]
