@@ -37,7 +37,7 @@ def is_socket_user_authenticated(message):
 
 def is_token_expired(token):
 	try:
-		return AuthorizedToken.objects.get(token = key,expiry_date__lt = datetime.now() + get_http_client_token_expiry_time()).exits()
+		return AuthorizedToken.objects.get(token = key,expiry_date__lt = datetime.now() + get_http_client_token_expiry_time()).exists()
 	except:
 		return False
 
