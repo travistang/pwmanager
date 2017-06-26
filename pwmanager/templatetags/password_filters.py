@@ -19,6 +19,9 @@ def description(p):
 	return desc
 
 def json_friendly(pw):
-	pw['date_created'] = str(timezone.now() - pw['date_created']).split(',')[0]
-	pw['description'] = description(pw['password'])
-	return pw
+    pw['date_created'] = str(timezone.now() - pw['date_created']).split(',')[0]
+    if "day" not in pw['date_created']: 
+    # some incomprehensible strings will be shown if the age of the pw is less than one day
+        pw['date_created'] = "Recently"
+    pw['description'] = description(pw['password'])
+    return pw

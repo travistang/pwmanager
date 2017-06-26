@@ -138,6 +138,7 @@ def register(request):
 	User.objects.create_user(username,email,password)
 	return JsonResponse({'result':'success'})
 
+# login a user for HTTP session
 def authenticate(request):
 	if request.user.is_authenticated():
 		return redirect('index')
