@@ -93,7 +93,7 @@ $(function(){
 			.concat('<a href="#" class="list-group-item list-group-item-action flex-column align-items-start" id="' + hash + '">')
 			.concat('<button class="btn btn-danger pull-right option-btn btn-sm" style="display:none" id=' + hash +'-delete-btn>delete</button>')
 			.concat('<button class="btn btn-default pull-right option-btn btn-sm" style="display:none" id=' + hash +'-modify-btn>modify</button>')
-			
+			.concat('<button class="btn btn-default pull-right option-btn btn-sm" style="display:none" id=' + hash + '-reveal-btn>reveal</button>')	
 			.concat('<div class="d-flex w-100 justify-content-between">')
 			.concat('<h5 class="mb-1">'+ name + '</h5>')
 			.concat('<small>'+ date_created + '</small>')
@@ -108,7 +108,13 @@ $(function(){
 		{
 			toastr.success('Password copied to clipboard');
 		});
-
+		
+		$('#' + hash + '-reveal-btn').click(function(event)
+		{
+			event.stopPropagation();
+			toastr.clear();
+			toastr.info($(this).parent().prev().attr('value'));
+		});
 		$('#' + hash + '-modify-btn').click(function(event)
 		{
 			event.stopPropagation(); // do not trigger the copy event underneath
@@ -312,13 +318,6 @@ $(function(){
 
         if (pw != null)
         {
-        	/* TODO:
-        		1. set current password as field
-        		2. change toaster msg
-        		3. set name "readonly"
-        		4. set spinner value as the length of the value
-        		5. set checkbox according to the current password
-        	*/
         	$('#pw-proposed').val(pw['password']);
         	$('#pw-name').attr('readonly',true).val(pw['name']);
         	spinner.spinner('value',pw['password'].length);
