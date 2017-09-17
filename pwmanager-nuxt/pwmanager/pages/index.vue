@@ -9,13 +9,14 @@
       :passwords="passwords"
       @reloadPassword="reloadPassword"
       @deletePassword="deletePassword"
+      @addPassword="addPassword"
+      @editPassword="editPassword"
+      class="pwmanager"
     />
-    <Logo v-else />
   </div>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
 import Pwmanager from '~/components/Pwmanager.vue'
 import Vue from 'vue'
 import MuseUI from 'muse-ui'
@@ -30,7 +31,6 @@ let header = {
 }
 export default {
   components: {
-    Logo,
     Pwmanager
   },
 
@@ -46,13 +46,17 @@ export default {
   },
 
   methods: {
-    // TODO: work on me!
-    addPassword: function()
+    addPassword: function(pw)
     {
-      return DatabaseBroker.addPassword('hehe','hehe')
+      return DatabaseBroker.addPassword(pw.name,pw.password)
         .then((res) => {
-          console.log(res);
-          this.passwords.push({'name':'hehe','password':'hehe'})
+          // the server will return objectId and createAt only, needa populate UpdateAt as well
+          const data = res.data
+          pw.objectId = data.objectId
+          pw.createdAt = data.createdAt
+          pw.updatedAt = data.createdAt
+
+          this.passwords.push(pw)
         })
         .catch((e) => {
           error({statusCode: 404, message:e})
@@ -95,6 +99,14 @@ export default {
     {
         this.deletePassword(pw)
     });
+    this.$on("addPassword",(pw) =>
+    {
+        this.addPassword(pw)
+    });
+    this.$on("editPassword",(pw) =>
+    {
+        this.editPassword(pw)
+    });
   },
 }
 </script>
@@ -135,5 +147,8 @@ export default {
 
 .links {
   padding-top: 15px;
+}
+.pwmanager {
+  height:100%;
 }
 </style>

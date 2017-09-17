@@ -16,6 +16,11 @@
       @close="hideToast('edit')"
       @click = "hideToast('edit')"
   />
+  <mu-toast v-if="toasts['add']"
+      message="Password added"
+      @close="hideToast('add')"
+      @click = "hideToast('add')"
+  />
   <!-- Dialog session -->
   <mu-dialog :open="popupFlag['deletePrompt']" title="Confirm" @close="toggleDialog('deletePrompt')">
     Do you really want to delete password for {{selectedPassword?selectedPassword.name:''}}?
@@ -34,11 +39,11 @@
   </mu-dialog>
 
   <password-form
-    :isEdit="true"
+    :isEdit="isEdit"
     :password="selectedPassword"
     :open="popupFlag.editPrompt"
     :onClose="() => toggleDialog('editPrompt')"
-    :onAction="() => {toggleDialog('editPrompt'),editPassword(selectedPassword)}"
+    :onAction="() => {toggleDialog('editPrompt'),isEdit?editPassword(selectedPassword):addPassword(selectedPassword)}"
   />
 
 
@@ -58,6 +63,15 @@
   <mu-content-block>
   <mu-paper>
       <mu-list>
+        <!-- Top most item for adding password...-->
+        <mu-list-item
+          @click="promptAddPassword"
+          title="Add a Password"
+          class="add-pw-item"
+        >
+          <mu-icon value="add" slot="leftAvatar"/>
+
+        </mu-list-item>
         <password-item
           v-for="password in passwords"
           :password="password"
@@ -85,12 +99,14 @@ export default {
         copy: false,
         delete: false,
         edit: false,
+        add: false,
       },
       popupFlag: {
         editPrompt: false,
         deletePrompt: false,
       },
       selectedPassword: {},
+      isEdit: false,
     }
   },
   computed: {
@@ -141,14 +157,29 @@ export default {
     },
     promptEditPassword: function(pw)
     {
-      this.selectedPassword = pw;
+      this.isEdit = true
+      this.selectedPassword = pw
+      this.toggleDialog('editPrompt')
+    },
+    promptAddPassword: function(pw)
+    {
+      this.isEdit = false
+      this.selectedPassword = {
+        name: '',
+        password: ''
+      }
       this.toggleDialog('editPrompt')
     },
     editPassword: function(pw)
     {
       this.$emit('editPassword',pw)
       this.makeToastForNSeconds('edit',2)
-    }
+    },
+    addPassword: function(pw)
+    {
+      this.$emit('addPassword',pw)
+      this.makeToastForNSeconds('add',2)
+    },
   },
   components: {
     'password-item': PasswordItem,
@@ -176,6 +207,10 @@ export default {
   .mu-text-field-focus-line {
     background-color: #FFF;
   }
+}
+
+.add-pw-item {
+
 }
 
 </style>

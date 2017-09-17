@@ -10,10 +10,10 @@
         <mu-content-block>
           <mu-text-field
             hintText="Password Name"
+            v-model="passwordName"
             type="text"
             icon="contact_mail"
             :disabled="isEdit"
-            :value="passwordName"
             :rowsMax="2"
             fullWidth
           />
@@ -22,7 +22,7 @@
             hintText="Password"
             type="text"
             icon="vpn_key"
-            :value="passwordOrNull"
+            v-model="passwordOrNull"
             :rowsMax="2"
             disabled
             fullWidth
@@ -44,7 +44,7 @@
           <mu-paper>
               <mu-chip
                 v-for="(contain,cat) in passwordContains"
-                @click="toggle(cat);generatePassword"
+                @click="toggle(cat);"
                 :backgroundColor="contain?'deepPurple400':'grey300'"
                 :class="contain?'chip-selected':'chip'"
 
@@ -62,7 +62,6 @@
             :max="32"
             :step="1"
             :disabled="!isValidCriteria"
-            @change="generatePassword"
           />
         </mu-content-block>
       </mu-flexbox-item>
@@ -115,6 +114,9 @@ export default {
       passwordLength: 8,
     }
   },
+  watch: {
+    passwordLength: function (res){this.generatePassword()},
+  },
   computed: {
     isValidCriteria: function()
     {
@@ -131,18 +133,41 @@ export default {
           .map((k) => this.passwordContains[k])
           .reduce((c,q) => q?(c + 1):c,0)
     },
-    passwordName: function()
-    {
-      return this.password?this.password.name:null
+    passwordName: {
+      get: function()
+      {
+        return this.password?this.password.name:null
+      },
+      set: function(name)
+      {
+        if(this.password && !this.isEdit)
+        {
+          this.password.name = name
+        }
+      }
     },
-    passwordOrNull: function()
-    {
-      return this.password?this.password.password:null
-    }
+    passwordOrNull: {
+      get: function()
+      {
+        return this.password?this.password.password:null
+      },
+      set: function(password)
+      {
+        if(this.password)
+        {
+          this.password.password = password
+        }
+      }
+    },
   },
   methods: {
     generatePassword: function()
     {
+      if(!this.isValidCriteria)
+        {
+          this.password.password = ''
+          return
+        }
       // prepare functions
       const punc = "!@#$%^&*(){}:\"<>?\\\'/.,?><';[]|".split('')
       const alpha = "qwertyuiopasdfghjklzxcvbnm"
@@ -186,6 +211,7 @@ export default {
     toggle: function(cat)
     {
       this.passwordContains[cat] = !this.passwordContains[cat]
+      this.generatePassword()
     },
     catRepr: function(cat)
     {
