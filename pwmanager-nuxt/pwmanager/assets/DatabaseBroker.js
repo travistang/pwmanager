@@ -21,5 +21,10 @@ export default {
   {
     let data = {'name': name,'password': pw};
     return axios.post(`http://localhost:1337/parse/classes/Passwords`,data,this.config())
+  },
+  deletePassword: function(pw)
+  {
+    let id = pw.objectId;
+    return axios.delete(`http://localhost:1337/parse/classes/Passwords/${id}`,this.config())
   }
 }

@@ -4,7 +4,12 @@
       <mu-flat-button color="white" label="flat Button" slot="right" @click="addPassword"></mu-flat-button>
     </mu-appbar>
 <!--     <img src="./assets/logo.png"> -->
-    <Pwmanager v-if="passwords.length" :passwords="passwords"/>
+    <Pwmanager
+      v-if="passwords.length"
+      :passwords="passwords"
+      @reloadPassword="reloadPassword"
+      @deletePassword="deletePassword"
+    />
     <Logo v-else />
   </div>
 </template>
@@ -39,8 +44,9 @@ export default {
       error({ statusCode: 404, message: 'Cannot connect to server' })
     })
   },
-  // TODO: remove me
+
   methods: {
+    // BUG: this change the database but doesnt change the list
     addPassword: function()
     {
       return DatabaseBroker.addPassword('hehe','hehe')
@@ -51,8 +57,29 @@ export default {
         .catch((e) => {
           error({statusCode: 404, message:e})
         });
+    },
+    deletePassword: function(pw)
+    {
+      DatabaseBroker.deletePassword(pw)
+      .then((res) => {
+        // remove the deleted password from array
+        this.passwords = this.passwords.filter((curPw) =>
+        {
+            return curPw.objectId != pw.objectId;
+        })
+      })
+      .catch((e) => {
+        error({ statusCode: 404, message: 'Cannot connect to server' })
+      })
     }
-  }
+  },
+  created ()
+  {
+    this.$on("deletePassword",(pw) =>
+    {
+        this.deletePassword(pw)
+    });
+  },
 }
 </script>
 

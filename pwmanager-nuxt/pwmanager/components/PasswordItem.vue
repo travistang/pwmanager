@@ -7,8 +7,8 @@
           <mu-avatar :icon="iconTag" slot="leftAvatar"/>
           <span slot="describe"> {{description}}</span>
           <mu-icon-menu icon="more_horiz" slot="right" tooltip="Action" @click.stop>
-              <mu-menu-item title="Edit" @click.prevent="editPassword"/>
-              <mu-menu-item title="Delete" @click.prevent="deletePassword"/>
+              <mu-menu-item title="Edit" @click="editPassword"/>
+              <mu-menu-item title="Delete" @click="deletePassword"/>
           </mu-icon-menu>
 
         </mu-list-item>
@@ -23,10 +23,6 @@ export default {
   props: ['password'],
   data () {
     return {
-      popupFlag: {
-        editPanel: false,
-        deletePrompt: false,
-      },
     }
   },
 

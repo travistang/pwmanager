@@ -1,10 +1,34 @@
 <template>
   <div class="test">
+  <!-- Toast session -->
   <mu-toast v-if="toasts['copy']"
       message="Password copied"
       @close="hideToast('copy')"
       @click = "hideToast('copy')"
   />
+  <mu-toast v-if="toasts['delete']"
+      message="Password deleted"
+      @close="hideToast('delete')"
+      @click = "hideToast('delete')"
+  />
+  <!-- Dialog session -->
+  <mu-dialog :open="popupFlag['deletePrompt']" title="Dialog" @close="toggleDialog('deletePrompt')">
+    Do you really want to delete password for {{selectedPassword.name}}?
+    <mu-flat-button
+      slot="actions"
+      @click="toggleDialog('deletePrompt')"
+      primary
+      label="No"
+    />
+    <mu-flat-button
+      slot="actions"
+      primary
+      @click="toggleDialog('deletePrompt'),deletePassword(selectedPassword)"
+      label="Yes"
+    />
+  </mu-dialog>
+
+  <!-- Main element-->
   <mu-content-block>
     <mu-row gutter>
       <mu-col width="100"/>
@@ -22,6 +46,7 @@
           v-for="password in passwords"
           :password="password"
           @passwordClicked="copySuccessHandler"
+          @deletePassword="promptDeletePassword(password)"
         />
       </mu-list>
   </mu-paper>
@@ -32,7 +57,6 @@
 <script>
 import PasswordItem from '~/components/PasswordItem.vue'
 import _ from 'lodash'
-
 export default {
   name: 'pwmanager',
   props: ['passwords'],
@@ -41,23 +65,24 @@ export default {
       toastTimers : {},
       toasts : {
         copy: false,
-      }
+        delete: false,
+      },
+      popupFlag: {
+        editPanel: false,
+        deletePrompt: false,
+      },
+      selectedPassword: null,
     }
   },
   computed: {
-  },
-  created() {
 
-    this.$on('deletePassword',(pw) =>
-    {
-      this.passwords.push({'name':'hihi','password':'hohoho'})
-    });
   },
+
   events: {
-    passwordClicked: function(pw)
-    {
-      this.copyPassword(pw.pw);
-    }
+    // passwordClicked: function(pw)
+    // {
+    //   this.copyPassword(pw.pw);
+    // }
   },
   methods: {
 
@@ -75,6 +100,7 @@ export default {
     },
     makeToastForNSeconds: function(toastName,secs)
     {
+        this.hideAllToast()
         this.toasts[toastName] = true
         this.toastTimers[toastName] = setTimeout(() => { this.toasts[toastName] = false }, secs * 1000)
     },
@@ -82,6 +108,24 @@ export default {
     copySuccessHandler: function()
     {
       this.makeToastForNSeconds('copy',2)
+    },
+    toggleDialog: function(dialogName)
+    {
+      this.popupFlag[dialogName] = !this.popupFlag[dialogName]
+
+    },
+    // ask for deletion
+    promptDeletePassword: function(pw)
+    {
+      this.selectedPassword = pw;
+      this.toggleDialog('deletePrompt')
+    },
+    // Action function
+    // really delete the password
+    deletePassword: function(pw)
+    {
+      this.$emit('deletePassword',pw)
+      this.makeToastForNSeconds('delete',2)
     },
 
   },
