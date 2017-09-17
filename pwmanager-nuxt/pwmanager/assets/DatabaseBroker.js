@@ -26,5 +26,17 @@ export default {
   {
     let id = pw.objectId;
     return axios.delete(`http://localhost:1337/parse/classes/Passwords/${id}`,this.config())
-  }
+  },
+  editPassword: function(pw)
+  {
+    // TODO: me
+    // TODO: make everything inside the field unchanged except for the necessary fields.
+    let id = pw.objectId
+    let data = {'password': pw.password}
+    return axios.put(`http://localhost:1337/parse/classes/Passwords/${id}`,data,this.config())
+      // .then((updatedTime) => {
+      //   pw.updatedAt = updatedTime
+      //   return pw
+      // })
+  },
 }

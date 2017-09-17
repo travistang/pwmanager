@@ -46,7 +46,7 @@ export default {
   },
 
   methods: {
-    // BUG: this change the database but doesnt change the list
+    // TODO: work on me!
     addPassword: function()
     {
       return DatabaseBroker.addPassword('hehe','hehe')
@@ -71,7 +71,23 @@ export default {
       .catch((e) => {
         error({ statusCode: 404, message: 'Cannot connect to server' })
       })
-    }
+    },
+    editPassword: function(pw)
+    {
+        DatabaseBroker.editPassword(pw)
+        .then((res) => {
+          let id = pw.objectId
+          this.passwords = this.passwords.filter((p) =>
+          {
+              return p.objectId != id
+          })
+          pw.updatedAt = res.updatedAt
+          this.passwords.push(pw);
+        })
+        .catch((e) => {
+          error({ statusCode: 404, message: 'Cannot connect to server' })
+        })
+    },
   },
   created ()
   {

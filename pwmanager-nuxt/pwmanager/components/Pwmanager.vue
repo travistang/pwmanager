@@ -11,9 +11,14 @@
       @close="hideToast('delete')"
       @click = "hideToast('delete')"
   />
+  <mu-toast v-if="toasts['edit']"
+      message="Password edited"
+      @close="hideToast('edit')"
+      @click = "hideToast('edit')"
+  />
   <!-- Dialog session -->
-  <mu-dialog :open="popupFlag['deletePrompt']" title="Dialog" @close="toggleDialog('deletePrompt')">
-    Do you really want to delete password for {{selectedPassword.name}}?
+  <mu-dialog :open="popupFlag['deletePrompt']" title="Confirm" @close="toggleDialog('deletePrompt')">
+    Do you really want to delete password for {{selectedPassword?selectedPassword.name:''}}?
     <mu-flat-button
       slot="actions"
       @click="toggleDialog('deletePrompt')"
@@ -28,7 +33,17 @@
     />
   </mu-dialog>
 
+  <password-form
+    :isEdit="true"
+    :password="selectedPassword"
+    :open="popupFlag.editPrompt"
+    :onClose="() => toggleDialog('editPrompt')"
+    :onAction="() => {toggleDialog('editPrompt'),editPassword(selectedPassword)}"
+  />
+
+
   <!-- Main element-->
+  <!-- search field -->
   <mu-content-block>
     <mu-row gutter>
       <mu-col width="100"/>
@@ -39,6 +54,7 @@
     </mu-row>
   </mu-content-block>
 
+  <!-- Password List -->
   <mu-content-block>
   <mu-paper>
       <mu-list>
@@ -47,6 +63,7 @@
           :password="password"
           @passwordClicked="copySuccessHandler"
           @deletePassword="promptDeletePassword(password)"
+          @editPassword="promptEditPassword(password)"
         />
       </mu-list>
   </mu-paper>
@@ -56,6 +73,7 @@
 
 <script>
 import PasswordItem from '~/components/PasswordItem.vue'
+import PasswordForm from '~/components/PasswordForm.vue'
 import _ from 'lodash'
 export default {
   name: 'pwmanager',
@@ -66,23 +84,17 @@ export default {
       toasts : {
         copy: false,
         delete: false,
+        edit: false,
       },
       popupFlag: {
-        editPanel: false,
+        editPrompt: false,
         deletePrompt: false,
       },
-      selectedPassword: null,
+      selectedPassword: {},
     }
   },
   computed: {
 
-  },
-
-  events: {
-    // passwordClicked: function(pw)
-    // {
-    //   this.copyPassword(pw.pw);
-    // }
   },
   methods: {
 
@@ -127,10 +139,20 @@ export default {
       this.$emit('deletePassword',pw)
       this.makeToastForNSeconds('delete',2)
     },
-
+    promptEditPassword: function(pw)
+    {
+      this.selectedPassword = pw;
+      this.toggleDialog('editPrompt')
+    },
+    editPassword: function(pw)
+    {
+      this.$emit('editPassword',pw)
+      this.makeToastForNSeconds('edit',2)
+    }
   },
   components: {
-    'password-item': PasswordItem
+    'password-item': PasswordItem,
+    'password-form': PasswordForm,
   }
 }
 </script>

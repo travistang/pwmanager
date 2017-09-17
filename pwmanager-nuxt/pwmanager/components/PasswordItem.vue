@@ -64,7 +64,7 @@ export default {
     },
     editPassword: function()
     {
-      // TODO: this
+      this.$emit('editPassword',this.password)
     },
   }
 }
