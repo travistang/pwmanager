@@ -5,12 +5,6 @@
     </mu-appbar>
 <!--     <img src="./assets/logo.png"> -->
     <Pwmanager
-      v-if="passwords.length"
-      :passwords="passwords"
-      @reloadPassword="reloadPassword"
-      @deletePassword="deletePassword"
-      @addPassword="addPassword"
-      @editPassword="editPassword"
       class="pwmanager"
     />
   </div>
@@ -32,81 +26,6 @@ let header = {
 export default {
   components: {
     Pwmanager
-  },
-
-  asyncData({params,error}) {
-    // initial fetch of the list of passwords from the server
-    return DatabaseBroker.getPassword()
-    .then((res) => {
-      return { passwords: res.data.results }
-    })
-    .catch((e) => {
-      error({ statusCode: 404, message: 'Cannot connect to server' })
-    })
-  },
-
-  methods: {
-    addPassword: function(pw)
-    {
-      return DatabaseBroker.addPassword(pw.name,pw.password)
-        .then((res) => {
-          // the server will return objectId and createAt only, needa populate UpdateAt as well
-          const data = res.data
-          pw.objectId = data.objectId
-          pw.createdAt = data.createdAt
-          pw.updatedAt = data.createdAt
-
-          this.passwords.push(pw)
-        })
-        .catch((e) => {
-          error({statusCode: 404, message:e})
-        });
-    },
-    deletePassword: function(pw)
-    {
-      DatabaseBroker.deletePassword(pw)
-      .then((res) => {
-        // remove the deleted password from array
-        this.passwords = this.passwords.filter((curPw) =>
-        {
-            return curPw.objectId != pw.objectId;
-        })
-      })
-      .catch((e) => {
-        error({ statusCode: 404, message: 'Cannot connect to server' })
-      })
-    },
-    editPassword: function(pw)
-    {
-        DatabaseBroker.editPassword(pw)
-        .then((res) => {
-          let id = pw.objectId
-          this.passwords = this.passwords.filter((p) =>
-          {
-              return p.objectId != id
-          })
-          pw.updatedAt = res.updatedAt
-          this.passwords.push(pw);
-        })
-        .catch((e) => {
-          error({ statusCode: 404, message: 'Cannot connect to server' })
-        })
-    },
-  },
-  created ()
-  {
-    this.$on("deletePassword",(pw) =>
-    {
-        this.deletePassword(pw)
-    });
-    this.$on("addPassword",(pw) =>
-    {
-        this.addPassword(pw)
-    });
-    this.$on("editPassword",(pw) =>
-    {
-        this.editPassword(pw)
-    });
   },
 }
 </script>

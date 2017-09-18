@@ -78,6 +78,7 @@
         </mu-list-item>
         <password-item
           v-for="password in filteredPasswords"
+          :key="password.name"
           :password="password"
           @passwordClicked="copySuccessHandler"
           @deletePassword="promptDeletePassword(password)"
@@ -92,10 +93,25 @@
 <script>
 import PasswordItem from '~/components/PasswordItem.vue'
 import PasswordForm from '~/components/PasswordForm.vue'
+import DatabaseBroker from '~/assets/DatabaseBroker.js'
 import _ from 'lodash'
+import Vue from 'vue'
 export default {
   name: 'pwmanager',
-  props: ['passwords'],
+  // props: ['passwords'],
+
+  mounted: function(){
+    // initial fetch of the list of passwords from the server
+    DatabaseBroker.getPassword()
+    .then((res) => {
+      this.passwords = res.data.results
+      this.filteredPasswords = res.data.results
+    })
+    .catch((e) => {
+      this.passwords = []
+      error({ statusCode: 404, message: 'Cannot connect to server' })
+    })
+  },
   data () {
     return {
       toastTimers : {},
@@ -111,18 +127,31 @@ export default {
       },
       selectedPassword: {},
       isEdit: false,
-      filterWords: ''
+      filterWords: '',
+      passwords: [],
+      filteredPasswords: [],
     }
   },
-  computed: {
-    filteredPasswords: function()
+  watch: {
+    filterWords: function(word)
     {
-      const searchWord = this.filterWords.trim().toLowerCase()
-      if (searchWord.length == 0) return this.passwords
-      return this.passwords.filter(
-        (pw) => pw.name.toLowerCase().indexOf(searchWord) > -1)
+        const searchWord = word.trim().toLowerCase()
+        // if (searchWord.length == 0) return this.passwords
+        this.filteredPasswords = this.passwords.filter(
+          (pw) => pw.name.toLowerCase().indexOf(searchWord) > -1)
     }
   },
+  // computed: {
+  //   filteredPasswords: function()
+  //   {
+  //     const searchWord = this.filterWords.trim().toLowerCase()
+  //     // if (searchWord.length == 0) return this.passwords
+  //     let res = this.passwords.filter(
+  //       (pw) => pw.name.toLowerCase().indexOf(searchWord) > -1)
+  //     // alert(new String(res.length) +  ' ' + new String(this.passwords.length))
+  //     return res
+  //   }
+  // },
   methods: {
 
     // Toast related
@@ -163,8 +192,18 @@ export default {
     // really delete the password
     deletePassword: function(pw)
     {
-      this.$emit('deletePassword',pw)
-      this.makeToastForNSeconds('delete',2)
+      DatabaseBroker.deletePassword(pw)
+      .then((res) => {
+        // remove the deleted password from array
+        this.passwords = this.passwords.filter((curPw) =>
+        {
+            return curPw.objectId != pw.objectId;
+        })
+        this.makeToastForNSeconds('delete',2)
+      })
+      .catch((e) => {
+        error({ statusCode: 404, message: 'Cannot connect to server' })
+      })
     },
     promptEditPassword: function(pw)
     {
@@ -183,13 +222,47 @@ export default {
     },
     editPassword: function(pw)
     {
-      this.$emit('editPassword',pw)
-      this.makeToastForNSeconds('edit',2)
+      DatabaseBroker.editPassword(pw)
+      .then((res) => {
+        let id = pw.objectId
+        let pwList = this.passwords.filter((p) => p.objectId != id)
+        for(let i in this.passwords)
+        {
+          if(id == this.passwords[i].objectId)
+          {
+            let newPw = this.passwords[i]
+            newPw.updatedAt = res.updatedAt
+            newPw.password = pw.password
+            pwList.push(newPw)
+            this.passwords = pwList
+            this.makeToastForNSeconds('edit',2)
+            break
+          }
+        }
+
+      })
+      .catch((e) => {
+        error({ statusCode: 404, message: 'Cannot connect to server' })
+      })
+
     },
     addPassword: function(pw)
     {
-      this.$emit('addPassword',pw)
-      this.makeToastForNSeconds('add',2)
+      return DatabaseBroker.addPassword(pw.name,pw.password)
+        .then((res) => {
+          // the server will return objectId and createAt only, needa populate UpdateAt as well
+          const data = res.data
+          pw.objectId = data.objectId
+          pw.createdAt = data.createdAt
+          pw.updatedAt = data.createdAt
+
+          this.passwords.push(pw)
+          this.makeToastForNSeconds('add',2)
+        })
+        .catch((e) => {
+          error({statusCode: 404, message:e})
+        });
+
     },
   },
   components: {

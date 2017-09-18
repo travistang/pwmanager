@@ -87,15 +87,15 @@ export default {
   props: {
     'password': {
       type: Object,
-      validator: function(pw)
-      {
-        if (pw == null) return true
-        return pw.name
-            && pw.createdAt
-            && pw.updatedAt
-            && pw.password
-            && pw.objectId
-      }
+      // validator: function(pw)
+      // {
+      //   if (pw == null) return true
+      //   return pw.name
+      //       && pw.createdAt
+      //       && pw.updatedAt
+      //       && pw.password
+      //       && pw.objectId
+      // }
     },
     'isEdit':   Boolean,
     'open':     Boolean,
@@ -119,16 +119,13 @@ export default {
     // address the problem that no password is given when a new password is created without clicking any buttons
     open: function(isOpened)
     {
-      if(isOpened && this.password != null)
+      if(isOpened && this.password != null && this.password.password == '')
       {
          this.generatePassword();
       }
     }
   },
-  // mounted: function()
-  // {
-  //   if(!this.isEdit) this.password.password = this.generatePassword()
-  // },
+
   computed: {
     isValidCriteria: function()
     {
