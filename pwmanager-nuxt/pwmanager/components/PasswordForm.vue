@@ -15,7 +15,7 @@
             icon="contact_mail"
             :disabled="isEdit"
             :rowsMax="2"
-            :errorText="isProposedPasswordNameValid?undefined:'This name has been used for another password'"
+            :errorText="passwordNameErrorText"
             fullWidth
             required
           />
@@ -79,7 +79,7 @@
       primary
       @click="onAction"
       :label="isEdit?'Update Password':'Create Password'"
-      :disabled="!isValidCriteria || !isProposedPasswordNameValid"
+      :disabled="!isOKToSubmitPassword"
     />
   </mu-dialog>
 </template>
@@ -159,6 +159,19 @@ export default {
           this.password.name = name
         }
       }
+    },
+    isPasswordNameEmpty: function() {
+      return this.passwordName != null && this.passwordName.trim().length == 0
+    },
+    passwordNameErrorText: function() {
+      if (this.isPasswordNameEmpty) return "Password name cannot be empty"
+      if (!this.isProposedPasswordNameValid) return "This name has been used for another password"
+      return null
+    },
+    isOKToSubmitPassword: function() {
+      return this.isProposedPasswordNameValid
+        && this.isValidCriteria
+        && !this.isPasswordNameEmpty
     },
     passwordOrNull: {
       get: function()

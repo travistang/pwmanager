@@ -251,7 +251,7 @@ export default {
     {
       // tell the form whether the given password name is used before or not
       this.isProposedPasswordNameValid =
-        this.passwords.map(p => p.name).indexOf(newPasswordName) == -1
+        this.passwords.map(p => p.name).indexOf(newPasswordName) == -1 || this.isEdit
     }
   },
   created: function()
