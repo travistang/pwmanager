@@ -76,7 +76,18 @@
           class="add-pw-item"
         >
           <mu-icon value="add" slot="leftAvatar"/>
-
+          <mu-icon
+            value="sort_by_alpha"
+            slot="rightAvatar"
+            @click.stop="sortAlpha"
+            :tooltip="showAlphaSortTooltip"
+          />
+          <mu-icon
+            value="date_range"
+            slot="rightAvatar"
+            @click.stop="sortDate"
+            :tooltip="showDateSortTooltip"
+          />
         </mu-list-item>
         <password-item
           v-for="password in filteredPasswords"
@@ -123,21 +134,87 @@ export default {
       isEdit: false,
       filterWords: '',
       passwords: [],
-      isProposedPasswordNameValid: true
+      isProposedPasswordNameValid: true,
+      sortAccordingTo: null,
+
     }
-  },
-  watch: {
   },
   computed: {
     filteredPasswords: function()
     {
       const searchWord = this.filterWords.trim().toLowerCase()
       // if (searchWord.length == 0) return this.passwords
-      return this.passwords.filter(
+      let res = this.passwords.filter(
         (pw) => pw.name.toLowerCase().indexOf(searchWord) > -1)
-    }
+
+      // define sort function
+      let sortFunc = null;
+      if(this.sortAccordingTo)
+      {
+        switch(this.sortAccordingTo)
+        {
+          case 'nameAsc':
+            sortFunc = function(a,b){
+              return (a.name.toString().toLowerCase() < b.name.toString().toLowerCase())?-1:1
+            }
+            break
+          case 'nameDsc':
+            sortFunc = function(a,b){
+              return (b.name.toString().toLowerCase() < a.name.toString().toLowerCase())?-1:1
+            }
+            break
+          case 'dateAsc':
+            sortFunc = function(a,b){
+              return new Date(a.updatedAt) < new Date(b.updatedAt)
+            }
+            break
+          case 'dateDsc':
+            sortFunc = function(a,b){
+              return new Date(b.updatedAt) < new Date(a.updatedAt)
+            }
+            break
+          default:
+            break
+        }
+        }
+      else return res
+      if (sortFunc)
+      {
+        let r = res.sort(sortFunc)
+        // alert(JSON.stringify(r))
+        return r
+      }
+      return res
+    },
+    showAlphaSortTooltip: function()
+    {
+      const methodOrder = [null,'nameAsc','nameDsc']
+      const curSortOpt  = this.sortAccordingTo;
+      const i = methodOrder.indexOf(curSortOpt)
+      if(i < 0) return 'nameAsc'
+      return methodOrder[(i + 1) % methodOrder.length]
+    },
+    showDateSortTooltip: function()
+    {
+      const methodOrder = [null,'dateAsc','dateDsc']
+      const curSortOpt = this.sortAccordingTo
+      const i = methodOrder.indexOf(curSortOpt)
+      if(i < 0) return 'dateAsc'
+      return methodOrder[(i + 1) % methodOrder.length]
+    },
   },
   methods: {
+    // sorting func
+
+    sortAlpha: function()
+    {
+      this.sortAccordingTo = this.showAlphaSortTooltip
+    },
+
+    sortDate: function()
+    {
+      this.sortAccordingTo = this.showDateSortTooltip
+    },
     // Toast related
     hideToast: function(toastName){
         if (this.toastTimers[toastName]) clearTimeout(this.toastTimers[toastName]);

@@ -6,7 +6,7 @@
         <mu-list-item class="list-item" :title="password.name" @click="copyToClipboard">
           <mu-avatar :icon="iconTag" slot="leftAvatar"/>
           <span slot="describe"> {{description}}</span>
-          <mu-icon-menu icon="more_horiz" slot="right" tooltip="Action" @click.stop>
+          <mu-icon-menu icon="more_horiz" slot="right" tooltip="Action" @change.prevent.stop>
               <mu-menu-item title="Edit" @click="editPassword"/>
               <mu-menu-item title="Delete" @click="deletePassword"/>
           </mu-icon-menu>
