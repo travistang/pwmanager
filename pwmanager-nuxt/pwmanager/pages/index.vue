@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <mu-appbar title="Password Manager">
-      <mu-flat-button color="white" label="flat Button" slot="right" @click="addPassword"></mu-flat-button>
+      <!-- <mu-flat-button color="white" label="flat Button" slot="right" @click="addPassword"></mu-flat-button> -->
     </mu-appbar>
 <!--     <img src="./assets/logo.png"> -->
     <Pwmanager

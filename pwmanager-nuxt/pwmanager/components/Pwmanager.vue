@@ -53,7 +53,11 @@
     <mu-row gutter>
       <mu-col width="100"/>
       <mu-col width="100">
-        <mu-text-field icon="search" class="appbar-search-field" hintText="Search for Passwords"/>
+        <mu-text-field
+          v-model="filterWords"
+          icon="search"
+          class="appbar-search-field"
+          hintText="Search for Passwords"/>
       </mu-col>
       <mu-col width="100"/>
     </mu-row>
@@ -73,7 +77,7 @@
 
         </mu-list-item>
         <password-item
-          v-for="password in passwords"
+          v-for="password in filteredPasswords"
           :password="password"
           @passwordClicked="copySuccessHandler"
           @deletePassword="promptDeletePassword(password)"
@@ -107,10 +111,17 @@ export default {
       },
       selectedPassword: {},
       isEdit: false,
+      filterWords: ''
     }
   },
   computed: {
-
+    filteredPasswords: function()
+    {
+      const searchWord = this.filterWords.trim().toLowerCase()
+      if (searchWord.length == 0) return this.passwords
+      return this.passwords.filter(
+        (pw) => pw.name.toLowerCase().indexOf(searchWord) > -1)
+    }
   },
   methods: {
 
@@ -166,7 +177,7 @@ export default {
       this.isEdit = false
       this.selectedPassword = {
         name: '',
-        password: ''
+        password: '',
       }
       this.toggleDialog('editPrompt')
     },

@@ -1,7 +1,7 @@
 <template>
   <mu-dialog
     :open="open"
-    :title="isEdit?'Edit Password':'AddPassword'"
+    :title="isEdit?'Edit Password':'Add a Password'"
     @close="onClose"
   >
     <!-- left half-->
@@ -41,7 +41,7 @@
         <mu-content-block>
 
           Password of {{passwordName}} contains:
-          <mu-paper>
+          <div>
               <mu-chip
                 v-for="(contain,cat) in passwordContains"
                 @click="toggle(cat);"
@@ -52,7 +52,7 @@
                 <mu-avatar :size="32">{{getAvatar(cat)}}</mu-avatar>
                 {{catRepr(cat)}}
               </mu-chip>
-          </mu-paper>
+          </div>
           <!-- <br/> -->
         </mu-content-block>
         <mu-content-block>
@@ -116,15 +116,25 @@ export default {
   },
   watch: {
     passwordLength: function (res){this.generatePassword()},
+    // address the problem that no password is given when a new password is created without clicking any buttons
+    open: function(isOpened)
+    {
+      if(isOpened && this.password != null)
+      {
+         this.generatePassword();
+      }
+    }
   },
+  // mounted: function()
+  // {
+  //   if(!this.isEdit) this.password.password = this.generatePassword()
+  // },
   computed: {
     isValidCriteria: function()
     {
       // check if all of the criteria has been disabled
-      if (!(Object.keys(this.passwordContains)
-          .map((k) => this.passwordContains[k])
-          .reduce((p,q) => p || q))) return false
-      return true
+      return Object.values(this.passwordContains)
+          .reduce((p,q) => p || q)
     },
     numCriteria: function()
     {
