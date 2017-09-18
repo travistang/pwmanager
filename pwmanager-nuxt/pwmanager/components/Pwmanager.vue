@@ -102,15 +102,7 @@ export default {
 
   mounted: function(){
     // initial fetch of the list of passwords from the server
-    DatabaseBroker.getPassword()
-    .then((res) => {
-      this.passwords = res.data.results
-      this.filteredPasswords = res.data.results
-    })
-    .catch((e) => {
-      this.passwords = []
-      error({ statusCode: 404, message: 'Cannot connect to server' })
-    })
+    this.getPassword()
   },
   data () {
     return {
@@ -129,31 +121,20 @@ export default {
       isEdit: false,
       filterWords: '',
       passwords: [],
-      filteredPasswords: [],
     }
   },
   watch: {
-    filterWords: function(word)
+  },
+  computed: {
+    filteredPasswords: function()
     {
-        const searchWord = word.trim().toLowerCase()
-        // if (searchWord.length == 0) return this.passwords
-        this.filteredPasswords = this.passwords.filter(
-          (pw) => pw.name.toLowerCase().indexOf(searchWord) > -1)
+      const searchWord = this.filterWords.trim().toLowerCase()
+      // if (searchWord.length == 0) return this.passwords
+      return this.passwords.filter(
+        (pw) => pw.name.toLowerCase().indexOf(searchWord) > -1)
     }
   },
-  // computed: {
-  //   filteredPasswords: function()
-  //   {
-  //     const searchWord = this.filterWords.trim().toLowerCase()
-  //     // if (searchWord.length == 0) return this.passwords
-  //     let res = this.passwords.filter(
-  //       (pw) => pw.name.toLowerCase().indexOf(searchWord) > -1)
-  //     // alert(new String(res.length) +  ' ' + new String(this.passwords.length))
-  //     return res
-  //   }
-  // },
   methods: {
-
     // Toast related
     hideToast: function(toastName){
         if (this.toastTimers[toastName]) clearTimeout(this.toastTimers[toastName]);
@@ -205,6 +186,18 @@ export default {
         error({ statusCode: 404, message: 'Cannot connect to server' })
       })
     },
+    getPassword: function()
+    {
+      DatabaseBroker.getPassword()
+      .then((res) => {
+        this.passwords = res.data.results
+        this.filteredPasswords = res.data.results
+      })
+      .catch((e) => {
+        this.passwords = []
+        error({ statusCode: 404, message: 'Cannot connect to server' })
+      })
+    },
     promptEditPassword: function(pw)
     {
       this.isEdit = true
@@ -224,22 +217,9 @@ export default {
     {
       DatabaseBroker.editPassword(pw)
       .then((res) => {
-        let id = pw.objectId
-        let pwList = this.passwords.filter((p) => p.objectId != id)
-        for(let i in this.passwords)
-        {
-          if(id == this.passwords[i].objectId)
-          {
-            let newPw = this.passwords[i]
-            newPw.updatedAt = res.updatedAt
-            newPw.password = pw.password
-            pwList.push(newPw)
-            this.passwords = pwList
-            this.makeToastForNSeconds('edit',2)
-            break
-          }
-        }
+        this.getPassword()
 
+        this.makeToastForNSeconds('edit',2)
       })
       .catch((e) => {
         error({ statusCode: 404, message: 'Cannot connect to server' })

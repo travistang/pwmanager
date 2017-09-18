@@ -37,8 +37,8 @@ export default {
         // TODO: me
         const createdDate = this.getDateStringFromDate(this.password.createdAt)
         const updatedDate = this.getDateStringFromDate(this.password.updatedAt)
-          let        desc = "Created at: " + createdDate
-        if (createdDate != updatedDate)
+        let          desc = "Created at: " + createdDate
+        if (this.password.createdAt != this.password.updatedAt)
         {
             desc = `${desc}\n Updated at: ${updatedDate}`
         }

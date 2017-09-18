@@ -123,7 +123,8 @@ export default {
       {
          this.generatePassword();
       }
-    }
+    },
+    
   },
 
   computed: {
