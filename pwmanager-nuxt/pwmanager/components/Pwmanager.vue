@@ -44,6 +44,8 @@
     :open="popupFlag.editPrompt"
     :onClose="() => toggleDialog('editPrompt')"
     :onAction="() => {toggleDialog('editPrompt'),isEdit?editPassword(selectedPassword):addPassword(selectedPassword)}"
+    :isProposedPasswordNameValid="isProposedPasswordNameValid"
+    @newPasswordName="checkProposedPassword"
   />
 
 
@@ -121,6 +123,7 @@ export default {
       isEdit: false,
       filterWords: '',
       passwords: [],
+      isProposedPasswordNameValid: true
     }
   },
   watch: {
@@ -244,6 +247,16 @@ export default {
         });
 
     },
+    checkProposedPassword: function(newPasswordName)
+    {
+      // tell the form whether the given password name is used before or not
+      this.isProposedPasswordNameValid =
+        this.passwords.map(p => p.name).indexOf(newPasswordName) == -1
+    }
+  },
+  created: function()
+  {
+    this.$on('newPasswordName',(name) => this.checkProposedPassword(name))
   },
   components: {
     'password-item': PasswordItem,

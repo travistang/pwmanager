@@ -15,7 +15,9 @@
             icon="contact_mail"
             :disabled="isEdit"
             :rowsMax="2"
+            :errorText="isProposedPasswordNameValid?undefined:'This name has been used for another password'"
             fullWidth
+            required
           />
           <br/>
           <mu-text-field
@@ -77,7 +79,7 @@
       primary
       @click="onAction"
       :label="isEdit?'Update Password':'Create Password'"
-      :disabled="!isValidCriteria"
+      :disabled="!isValidCriteria || !isProposedPasswordNameValid"
     />
   </mu-dialog>
 </template>
@@ -97,6 +99,7 @@ export default {
       //       && pw.objectId
       // }
     },
+    'isProposedPasswordNameValid': Boolean,
     'isEdit':   Boolean,
     'open':     Boolean,
     'onClose':  Function,
@@ -124,7 +127,10 @@ export default {
          this.generatePassword();
       }
     },
-    
+    passwordName: function(newName)
+    {
+      this.$emit("newPasswordName",newName)
+    }
   },
 
   computed: {
