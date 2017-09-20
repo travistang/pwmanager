@@ -5,6 +5,7 @@
   "author": "Travis",
   "private": true,
   "scripts": {
+    "deploy": "nuxt build && nuxt dev -H 0.0.0.0",
     "dev": "nuxt",
     "build": "nuxt build",
     "start": "nuxt start",
