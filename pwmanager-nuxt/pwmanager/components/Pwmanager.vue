@@ -78,13 +78,13 @@
           <mu-icon value="add" slot="leftAvatar"/>
           <mu-icon
             value="sort_by_alpha"
-            slot="rightAvatar"
+            slot="right"
             @click.stop="sortAlpha"
             :tooltip="showAlphaSortTooltip"
           />
           <mu-icon
             value="date_range"
-            slot="rightAvatar"
+            slot="right"
             @click.stop="sortDate"
             :tooltip="showDateSortTooltip"
           />
@@ -176,7 +176,7 @@ export default {
           default:
             break
         }
-        }
+      }
       else return res
       if (sortFunc)
       {
