@@ -3,8 +3,9 @@ import axios from 'axios'
 export default {
   host: function()
   {
-    return `http://v2.pwmanager.travis.sigma.ws`
+    return `https://v2.pwmanager.travis.sigma.ws`
   },
+
   headers: function()
   {
     return {
